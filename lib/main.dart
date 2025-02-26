@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'dart:ui' as ui;
+import 'package:intl/intl.dart';
 
 void main() {
-  setUrlStrategy(PathUrlStrategy());
   runApp(MyApp());
 }
 
@@ -12,86 +10,100 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ContactForm(),
+      home: PaymentForm(),
     );
   }
 }
 
-class ContactForm extends StatefulWidget {
+class PaymentForm extends StatefulWidget {
   @override
-  _ContactFormState createState() => _ContactFormState();
+  _PaymentFormState createState() => _PaymentFormState();
 }
 
-class _ContactFormState extends State<ContactForm> {
+class _PaymentFormState extends State<PaymentForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _cardNumberController = TextEditingController();
+  final TextEditingController _expiryDateController = TextEditingController();
+  final TextEditingController _cvvController = TextEditingController();
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2050),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _expiryDateController.text = DateFormat("MM/yyyy").format(picked);
+      });
+    }
+  }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      String name = _nameController.text;
-      String phone = _phoneController.text;
-      String message = _messageController.text;
+      String cardNumber = _cardNumberController.text;
+      String expiryDate = _expiryDateController.text;
+      String cvv = _cvvController.text;
 
-      print("Nombre: $name");
-      print("Teléfono: $phone");
-      print("Mensaje: $message");
+      print("Número de Tarjeta: $cardNumber");
+      print("Fecha de Expiración: $expiryDate");
+      print("CVV: $cvv");
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Formulario enviado con éxito')),
+        SnackBar(content: Text('Pago procesado con éxito')),
       );
 
-      _nameController.clear();
-      _phoneController.clear();
-      _messageController.clear();
+      _cardNumberController.clear();
+      _expiryDateController.clear();
+      _cvvController.clear();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Formulario de Contacto'))),
+      appBar: AppBar(title: Center(child: Text('Pagar con Tarjeta'))),
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
-            child: ListView(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(
-                  child: _buildTextField(
-                    label: 'Nombre:',
-                    controller: _nameController,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su nombre' : null,
-                  ),
+                _buildTextField(
+                  label: 'Número de Tarjeta:',
+                  controller: _cardNumberController,
+                  inputType: TextInputType.number,
+                  maxLength: 12,
+                  validator: (value) {
+                    if (value!.isEmpty) return 'Ingrese el número de tarjeta';
+                    if (value.length != 12) return 'Debe tener 12 dígitos';
+                    return null;
+                  },
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Teléfono:',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su número de teléfono' : null,
-                  ),
-                ),
+                _buildDatePicker(),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Mensaje:',
-                    controller: _messageController,
-                    maxLines: 4,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su mensaje' : null,
-                  ),
+                _buildTextField(
+                  label: 'CVV:',
+                  controller: _cvvController,
+                  inputType: TextInputType.number,
+                  maxLength: 3,
+                  isPassword: true,
+                  validator: (value) {
+                    if (value!.isEmpty) return 'Ingrese el CVV';
+                    if (value.length != 3) return 'Debe tener 3 dígitos';
+                    return null;
+                  },
                 ),
                 SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text('Enviar'),
-                  ),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text('Pagar'),
                 ),
               ],
             ),
@@ -104,25 +116,58 @@ class _ContactFormState extends State<ContactForm> {
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
+    TextInputType inputType = TextInputType.text,
+    int maxLength = 255,
+    bool isPassword = false,
     required String? Function(String?) validator,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        Container(
+        SizedBox(height: 5),
+        SizedBox(
           width: 400,
           child: TextFormField(
             controller: controller,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
-            decoration: InputDecoration(border: OutlineInputBorder()),
+            keyboardType: inputType,
+            maxLength: maxLength,
+            obscureText: isPassword,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              counterText: "",
+            ),
             validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Fecha de Expiración:',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 5),
+        SizedBox(
+          width: 400,
+          child: TextFormField(
+            controller: _expiryDateController,
+            readOnly: true,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.calendar_today),
+            ),
+            onTap: () => _selectDate(context),
+            validator: (value) =>
+                value!.isEmpty ? 'Seleccione la fecha de expiración' : null,
           ),
         ),
       ],
