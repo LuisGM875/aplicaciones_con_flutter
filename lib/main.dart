@@ -25,33 +25,33 @@ class ContactForm extends StatefulWidget {
 class _ContactFormState extends State<ContactForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       String name = _nameController.text;
-      String phone = _phoneController.text;
-      String message = _messageController.text;
+      String email = _emailController.text;
+      String password = _passwordController.text;
 
       print("Nombre: $name");
-      print("Teléfono: $phone");
-      print("Mensaje: $message");
+      print("Email: $email");
+      print("Contraseña: $password");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Formulario enviado con éxito')),
       );
 
       _nameController.clear();
-      _phoneController.clear();
-      _messageController.clear();
+      _emailController.clear();
+      _passwordController.clear();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Formulario de Contacto'))),
+      appBar: AppBar(title: Center(child: Text('Formulario de Registro'))),
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
@@ -65,25 +65,25 @@ class _ContactFormState extends State<ContactForm> {
                   child: _buildTextField(
                     label: 'Nombre:',
                     controller: _nameController,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su nombre' : null,
+                    validator: (value) => value!.isEmpty ? 'Nombre' : null,
                   ),
                 ),
                 SizedBox(height: 10),
                 Center(
                   child: _buildTextField(
-                    label: 'Teléfono:',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su número de teléfono' : null,
+                    label: 'Email:',
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) => value!.isEmpty ? 'Email' : null,
                   ),
                 ),
                 SizedBox(height: 10),
                 Center(
                   child: _buildTextField(
-                    label: 'Mensaje:',
-                    controller: _messageController,
-                    maxLines: 4,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su mensaje' : null,
+                    label: 'Contraseña:',
+                    controller: _passwordController,
+                    obscureText: true,
+                    validator: (value) => value!.isEmpty ? 'Contraseña' : null,
                   ),
                 ),
                 SizedBox(height: 20),
@@ -105,6 +105,7 @@ class _ContactFormState extends State<ContactForm> {
     required String label,
     required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
     int maxLines = 1,
     required String? Function(String?) validator,
   }) {
@@ -120,6 +121,7 @@ class _ContactFormState extends State<ContactForm> {
           child: TextFormField(
             controller: controller,
             keyboardType: keyboardType,
+            obscureText: obscureText,
             maxLines: maxLines,
             decoration: InputDecoration(border: OutlineInputBorder()),
             validator: validator,
