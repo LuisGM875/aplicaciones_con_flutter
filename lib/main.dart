@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'dart:ui' as ui;
 
 void main() {
-  setUrlStrategy(PathUrlStrategy());
   runApp(MyApp());
 }
 
@@ -12,86 +9,78 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ContactForm(),
+      home: CommentForm(),
     );
   }
 }
 
-class ContactForm extends StatefulWidget {
+class CommentForm extends StatefulWidget {
   @override
-  _ContactFormState createState() => _ContactFormState();
+  _CommentFormState createState() => _CommentFormState();
 }
 
-class _ContactFormState extends State<ContactForm> {
+class _CommentFormState extends State<CommentForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       String name = _nameController.text;
-      String phone = _phoneController.text;
-      String message = _messageController.text;
+      String email = _emailController.text;
+      String comment = _commentController.text;
 
       print("Nombre: $name");
-      print("Teléfono: $phone");
-      print("Mensaje: $message");
+      print("Email: $email");
+      print("Comentario: $comment");
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Formulario enviado con éxito')),
+        SnackBar(content: Text('Comentario enviado con éxito')),
       );
 
       _nameController.clear();
-      _phoneController.clear();
-      _messageController.clear();
+      _emailController.clear();
+      _commentController.clear();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Formulario de Contacto'))),
+      appBar: AppBar(title: Center(child: Text('Deja un Comentario'))),
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
-            child: ListView(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(
-                  child: _buildTextField(
-                    label: 'Nombre:',
-                    controller: _nameController,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su nombre' : null,
-                  ),
+                _buildTextField(
+                  label: 'Nombre:',
+                  controller: _nameController,
+                  validator: (value) => value!.isEmpty ? 'Ingrese su nombre' : null,
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Teléfono:',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su número de teléfono' : null,
-                  ),
+                _buildTextField(
+                  label: 'Email:',
+                  controller: _emailController,
+                  inputType: TextInputType.emailAddress,
+                  validator: (value) => value!.isEmpty ? 'Ingrese su email' : null,
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Mensaje:',
-                    controller: _messageController,
-                    maxLines: 4,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su mensaje' : null,
-                  ),
+                _buildTextField(
+                  label: 'Comentario:',
+                  controller: _commentController,
+                  maxLines: 4,
+                  validator: (value) => value!.isEmpty ? 'Ingrese su comentario' : null,
                 ),
                 SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text('Enviar'),
-                  ),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text('Enviar'),
                 ),
               ],
             ),
@@ -104,22 +93,23 @@ class _ContactFormState extends State<ContactForm> {
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
+    TextInputType inputType = TextInputType.text,
     int maxLines = 1,
     required String? Function(String?) validator,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        Container(
+        SizedBox(height: 5),
+        SizedBox(
           width: 400,
           child: TextFormField(
             controller: controller,
-            keyboardType: keyboardType,
+            keyboardType: inputType,
             maxLines: maxLines,
             decoration: InputDecoration(border: OutlineInputBorder()),
             validator: validator,
