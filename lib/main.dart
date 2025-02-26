@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 void main() {
-  setUrlStrategy(PathUrlStrategy());
   runApp(MyApp());
 }
 
@@ -12,86 +11,89 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ContactForm(),
+      home: HotelReservationForm(),
     );
   }
 }
 
-class ContactForm extends StatefulWidget {
+class HotelReservationForm extends StatefulWidget {
   @override
-  _ContactFormState createState() => _ContactFormState();
+  _HotelReservationFormState createState() => _HotelReservationFormState();
 }
 
-class _ContactFormState extends State<ContactForm> {
+class _HotelReservationFormState extends State<HotelReservationForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _checkinController = TextEditingController();
+  final TextEditingController _checkoutController = TextEditingController();
+  final TextEditingController _personsController = TextEditingController();
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      String name = _nameController.text;
-      String phone = _phoneController.text;
-      String message = _messageController.text;
+      String checkin = _checkinController.text;
+      String checkout = _checkoutController.text;
+      String persons = _personsController.text;
 
-      print("Nombre: $name");
-      print("Teléfono: $phone");
-      print("Mensaje: $message");
+      print("Fecha de Entrada: $checkin");
+      print("Fecha de Salida: $checkout");
+      print("Número de Personas: $persons");
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Formulario enviado con éxito')),
+        SnackBar(content: Text('Reserva enviada con éxito')),
       );
 
-      _nameController.clear();
-      _phoneController.clear();
-      _messageController.clear();
+      _checkinController.clear();
+      _checkoutController.clear();
+      _personsController.clear();
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        controller.text = DateFormat('yyyy-MM-dd').format(picked);
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Formulario de Contacto'))),
+      appBar: AppBar(title: Center(child: Text('Reserva de Habitación'))),
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
-            child: ListView(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(
-                  child: _buildTextField(
-                    label: 'Nombre:',
-                    controller: _nameController,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su nombre' : null,
-                  ),
+                _buildDateField(
+                  label: 'Fecha de Entrada:',
+                  controller: _checkinController,
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Teléfono:',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su número de teléfono' : null,
-                  ),
+                _buildDateField(
+                  label: 'Fecha de Salida:',
+                  controller: _checkoutController,
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Mensaje:',
-                    controller: _messageController,
-                    maxLines: 4,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su mensaje' : null,
-                  ),
+                _buildTextField(
+                  label: 'Número de Personas:',
+                  controller: _personsController,
+                  inputType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
                 SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text('Enviar'),
-                  ),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text('Reservar'),
                 ),
               ],
             ),
@@ -101,28 +103,61 @@ class _ContactFormState extends State<ContactForm> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildDateField({
     required String label,
     required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-    required String? Function(String?) validator,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        Container(
-          width: 400,
+        SizedBox(height: 5),
+        SizedBox(
+          width: 300,
           child: TextFormField(
             controller: controller,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
+            readOnly: true,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.calendar_today),
+                onPressed: () => _selectDate(context, controller),
+              ),
+            ),
+            validator: (value) =>
+                value!.isEmpty ? 'Este campo es obligatorio' : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType inputType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 5),
+        SizedBox(
+          width: 300,
+          child: TextFormField(
+            controller: controller,
+            keyboardType: inputType,
+            inputFormatters: inputFormatters,
             decoration: InputDecoration(border: OutlineInputBorder()),
-            validator: validator,
+            validator: (value) =>
+                value!.isEmpty ? 'Este campo es obligatorio' : null,
           ),
         ),
       ],
