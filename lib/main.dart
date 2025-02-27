@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'dart:ui' as ui;
 
 void main() {
-  setUrlStrategy(PathUrlStrategy());
   runApp(MyApp());
 }
 
@@ -12,86 +9,80 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ContactForm(),
+      home: EventRegistrationForm(),
     );
   }
 }
 
-class ContactForm extends StatefulWidget {
+class EventRegistrationForm extends StatefulWidget {
   @override
-  _ContactFormState createState() => _ContactFormState();
+  _EventRegistrationFormState createState() => _EventRegistrationFormState();
 }
 
-class _ContactFormState extends State<ContactForm> {
+class _EventRegistrationFormState extends State<EventRegistrationForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  String? _attendance;
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _attendance != null) {
       String name = _nameController.text;
-      String phone = _phoneController.text;
-      String message = _messageController.text;
+      String email = _emailController.text;
 
       print("Nombre: $name");
-      print("Teléfono: $phone");
-      print("Mensaje: $message");
+      print("Email: $email");
+      print("Asistirá: $_attendance");
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Formulario enviado con éxito')),
+        SnackBar(content: Text('Inscripción enviada con éxito')),
       );
 
       _nameController.clear();
-      _phoneController.clear();
-      _messageController.clear();
+      _emailController.clear();
+      setState(() {
+        _attendance = null;
+      });
+    } else if (_attendance == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, seleccione su asistencia')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Formulario de Contacto'))),
+      appBar: AppBar(title: Center(child: Text('Inscripción a un Evento'))),
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
-            child: ListView(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(
-                  child: _buildTextField(
-                    label: 'Nombre:',
-                    controller: _nameController,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su nombre' : null,
-                  ),
+                _buildTextField(
+                  label: 'Nombre:',
+                  controller: _nameController,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Ingrese su nombre' : null,
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Teléfono:',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su número de teléfono' : null,
-                  ),
+                _buildTextField(
+                  label: 'Email:',
+                  controller: _emailController,
+                  inputType: TextInputType.emailAddress,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Ingrese su email' : null,
                 ),
                 SizedBox(height: 10),
-                Center(
-                  child: _buildTextField(
-                    label: 'Mensaje:',
-                    controller: _messageController,
-                    maxLines: 4,
-                    validator: (value) => value!.isEmpty ? 'Ingrese su mensaje' : null,
-                  ),
-                ),
+                _buildRadioButtons(),
                 SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text('Enviar'),
-                  ),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text('Inscribirse'),
                 ),
               ],
             ),
@@ -104,26 +95,70 @@ class _ContactFormState extends State<ContactForm> {
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
+    TextInputType inputType = TextInputType.text,
     required String? Function(String?) validator,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        Container(
+        SizedBox(height: 5),
+        SizedBox(
           width: 400,
           child: TextFormField(
             controller: controller,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
+            keyboardType: inputType,
             decoration: InputDecoration(border: OutlineInputBorder()),
             validator: validator,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRadioButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          '¿Asistirá al evento?',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'Sí',
+                  groupValue: _attendance,
+                  onChanged: (value) {
+                    setState(() {
+                      _attendance = value;
+                    });
+                  },
+                ),
+                Text('Sí'),
+              ],
+            ),
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'No',
+                  groupValue: _attendance,
+                  onChanged: (value) {
+                    setState(() {
+                      _attendance = value;
+                    });
+                  },
+                ),
+                Text('No'),
+              ],
+            ),
+          ],
         ),
       ],
     );
